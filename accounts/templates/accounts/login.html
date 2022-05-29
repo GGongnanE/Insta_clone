@@ -1,0 +1,29 @@
+{% extends "accounts/layout.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div id="main_container">
+    <div class="form_container">
+        <div class="form">
+            <h1 class="sprite_insta_big_logo title"></h1>
+            <form method="POST" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" id="submit_btn" value="로그인" class="submit_btn">
+            </form>
+        </div>
+        <div class="bottom_box">
+            <div>
+                <span>아이디가 없으신가요?</span><a href="{% url 'accounts:signup' %}">회원가입</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
