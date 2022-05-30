@@ -11,6 +11,9 @@ import json
 from django.views.decorators.http import require_POST
 from django.http import HttpResponse
 
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
+
 '''
     1. 요청이 들어오면 posts 변수에 Post 전부를 저장
     2. 사용자가 로그인 상태일 때, 사용자 이름을 저장 -> 유저 모델 내용을 확인 
@@ -20,8 +23,29 @@ from django.http import HttpResponse
 
 # Create your views here.
 def post_list(request, tag=None):
-    posts = Post.objects.all()
+
     comment_form = CommentForm()
+    paginator = Paginator(post_list, 3)
+    page_num = request.POST.get('page')
+
+    print("page_num : ", page_num)  # None
+    print("page_num's type : ", type(page_num))
+
+    try:
+        posts = paginator.page(page_num)
+    except PageNotAnInteger:
+        # page 파라미터가 int가 아닌 값이 들어오면 1로 넘겨준다.
+        posts = paginator.page(1)
+    except EmptyPage:
+        # page가 페이지를 넘어서면 마지막 페이지를 넘겨준다.
+        posts = paginator.page(paginator.num_pages)
+
+    # Ajax 호출 되었을 경우
+    if request.is_ajax():
+        return render(request, 'post/post_list_ajax.html', {
+            'posts': posts,
+            'comment_form': comment_form,
+        })
 
     if request.user.is_authenticated:
         username = request.user

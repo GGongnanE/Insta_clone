@@ -2,6 +2,76 @@
 ( function(){
 
     const delegation = document.querySelector('.contents_box');
+    const side_box = document.querySelector('.side_box');
+    const header = document.querySelector('#header');
+
+    function resizeFunc() {
+        console.log('리사이즈');
+        if (scrollY >= 10) {
+            let calcWidth = (window.innerWidth * 0.5) + 167;
+            if (side_box) {
+                side_box.style.left = calcWidth + "px";
+            }
+        }
+    }
+
+    function scrollFunc() {
+        let scrollHeight = scrollY + window.innerHeight;
+        const documentHeight = document.body.scrollHeight;
+
+        if (scrollY >= 10) {
+            header.classList.add('on');
+            resizeFunc();
+            if (side_box) {
+                side_box.classList.add('on');
+            }
+        } else {
+            header.classList.remove('on');
+            if (side_box) {
+                side_box.classList.remove('on');
+                side_box.removeAttribute('style');
+            }
+        }
+
+        if (scrollHeight >= documentHeight) {
+            const page = document.querySelector('#page').value;
+            const end_page = {{ posts.paginator.num_pages }}
+
+            if (page > end_page) {
+                return;
+            }
+
+            document.querySelector('#page').value = parseInt(page) + 1;
+            callMorePostAjax(page);
+        }
+    }
+
+    function callMorePostAjax(page) {
+        const end_page = {{ posts.paginator.num_pages }};
+
+        if (page > end_page) {
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'post:post_list' %}",
+            data: {
+                'page':page,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            dataType: 'html',
+            success: addMorePostAjax,
+            error: function(request, status, error) {
+                alert("code : " + request.status + "\n" + "message:" + request.responseText + "\n" + "error:" + error);
+            }
+        });
+    }
+
+    function addMorePostAjax(data, textStatus, jqXHR) {
+        let post = document.querySelector('#post_list_ajax');
+        post.insertAdjacentHTML('beforeend', data);
+    }
 
     function delegationFunc(e) {
         let elem = e.target;
@@ -144,6 +214,10 @@
         elem.classList.toggle('on');
     }
 
+    // 뷰의 크기가 변할 때, resizeFunc 실행
+    window.addEventListener('resize', resizeFunc);
+    // 스크롤이 이동했을 때, scrollFunc 실행
+    window.addEventListener('scroll', scrollFunc);
     delegation.addEventListener('click', delegationFunc);
 
 })();
