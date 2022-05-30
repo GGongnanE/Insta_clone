@@ -19,16 +19,57 @@ def photo_path(instance, filename):
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     photo = ProcessedImageField(upload_to=photo_path,
-                                processors=[ResizeToFill(600,600)],
+                                processors=[ResizeToFill(600, 600)],
                                 format='PNG',
-                                options={ 'quality':100 })
+                                options={'quality': 100})
     content = models.CharField(max_length=200, help_text="최대 200자 입력 가능")
+    like_user_set = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                           blank=True,
+                                           related_name='like_user_set',
+                                           through='Like')
+    bookmark_user_set = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                           blank=True,
+                                           related_name='bookmark_user_set',
+                                           through='Bookmark')
+
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
 
+    @property
+    def like_count(self):
+        return self.like_user_set.count()
+
+    @property
+    def bookmark_count(self):
+        return self.bookmark_user_set.count()
+
     def __str__(self):
         return self.content
 
+
+# 좋아요
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (
+            ('user', 'post')
+        )
+
+
+class Bookmark(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (
+            ('user', 'post')
+        )
