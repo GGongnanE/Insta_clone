@@ -83,20 +83,35 @@
 
 
                 <div class="comment_container">
-                    <div class="comment" id="comment-list-ajax-post-37">
-                        <div class="comment-detail">
-                            <div class="nick_name m_text">ㅇㅇ2</div>
-                            <div>ㅁㄴㅇㄴㅁㅇㅁㄴㅇ</div>
+                    <div class="comment" id="comment-list-ajax-post-{{ post.id }}">
+                        {% for comment in post.comment_set.all %}
+                        <div class="comment-detail" id="comment {{ comment.id }}">
+                            <div class="nick_name m_text">{{ comment.author.profile.nickname }}</div>
+                            <div>{{ comment.comment }}</div>
+                            <!-- 만약 댓글의 주인이 현재 로그인한 유저면 댓글 삭제 버튼 오픈 -->
+                            {% if user == comment.author %}
+                            <input type="button" class="del-comment" data-name="comment_delete" value="삭제" name="{{ comment.id }}">
+                            {% endif %}
                         </div>
+                        {% endfor %}
                     </div>
                     <div class="small_heart">
                         <div class="sprite_small_heart_icon_outlint"></div>
                     </div>
                 </div>
                 <div class="timer">{{ post.created_at | timesince }}</div>
-                <div class="comment_field" id="add-comment-post37">
-                    <input type="text" placeholder="댓글">
-                    <div class="upload_btn m_text" data-name="comment">게시</div>
+                <div class="comment_field" id="add-comment-post{{ post.id }}">
+                    {% if user.is_authenticated %}
+                    {{ comment_form }}
+                    <!--  <input type="text" placeholder="댓글">-->
+                    <div class="upload_btn m_text" name="{{ post.id }}" data-name="comment">게시</div>
+                    {% else %}
+                    {{ comment.form }}
+                    <!--  게시가 안되고 에러창이 뜨게 된다.  -->
+                    <div class="upload_btn m_text" name="{{ post.id }}" data-name="comment" onclick="alert('댓글을 작성하려면 로그인이 필요합니다.')">
+                        게시
+                    </div>
+                    {% endif %}
                 </div>
             </article>
             {% endfor %}

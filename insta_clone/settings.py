@@ -55,6 +55,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'insta_clone.urls'
 
+# HTML과 같은 파일들을 관리한다.
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

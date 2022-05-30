@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .admin import PostForm
-from .models import Post
+from .forms import CommentForm
+from .models import Post, Comment
 
 import json
 from django.views.decorators.http import require_POST
@@ -15,9 +16,12 @@ from django.http import HttpResponse
     2. 사용자가 로그인 상태일 때, 사용자 이름을 저장 -> 유저 모델 내용을 확인 
     3. 사용자 프로필 저장 -> HTML 렌더링 (유저프로필, 포스트 리스트)
 '''
+
+
 # Create your views here.
-def post_list(request):
+def post_list(request, tag=None):
     posts = Post.objects.all()
+    comment_form = CommentForm()
 
     if request.user.is_authenticated:
         username = request.user
@@ -26,11 +30,13 @@ def post_list(request):
 
         return render(request, 'post/post_list.html', {
             'user_profile': user_profile,
-            'posts': posts
+            'posts': posts,
+            'comment_form': comment_form
         })
     else:
         return render(request, 'post/post_list.html', {
-            'posts': posts
+            'posts': posts,
+            'comment_form': comment_form
         })
 
 # 신규 포스트 작성
@@ -132,3 +138,63 @@ def post_bookmark(request):
                'message': message}
 
     return HttpResponse(json.dumps(context), content_type="application/json")
+
+'''
+    comment(댓글)
+    
+'''
+
+@login_required
+def comment_new(request):
+    pk = request.POST.get('pk')     # ajax를 통신하는 부분
+    post = get_object_or_404(Post, pk=pk)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.author = request.user
+            comment.post = post
+            comment.save()
+
+            return render(request, 'post/comment_new_ajax.html', {
+                'comment': comment
+            })
+
+    return redirect('post:post_list')
+
+
+# 상세페이지에서 댓글 추가 시 사용
+@login_required
+def comment_new_detail(request):
+    pk = request.POST.get('pk')
+    post = get_object_or_404(Post, pk=pk)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.author = request.user
+            comment.post = post
+            comment.save()
+
+            return render(request, 'post/comment_new_detail_ajax.html', {
+                'comment': comment
+            })
+
+
+@login_required
+def comment_delete(request):
+    pk = request.POST.get('pk')
+    comment = get_object_or_404(Comment, pk=pk)
+    if request.method == 'POST' and request.user == comment.author:
+        comment.delete()
+        message = '삭제완료'
+        status = 1
+
+    else:
+        message = '잘못된 접근입니다'
+        status = 0
+
+    return HttpResponse(json.dumps({'message': message, 'status': status, }), content_type="application/json")
+
