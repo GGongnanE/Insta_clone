@@ -1,0 +1,70 @@
+<script type="text/javascript">
+( function(){
+
+    const delegation = document.querySelector('.contents_box');
+
+    function delegationFunc(e) {
+        let elem = e.target;
+
+        console.log(elem);
+
+        while (!elem.getAttribute('data-name')){
+            elem = elem.parentNode;
+
+            if (elem.nodeName === 'BODY'){
+                elem = null;
+                return;
+            }
+        }
+
+        if (elem.matches('[data-name="heartbeat"]')){
+            console.log('하트!');
+
+            var pk = elem.getAttribute('name');
+            console.log(pk);
+
+            $.ajax({
+                type: "POST",
+                url: "{% url 'post:post_like' %}",
+                data: {'pk': pk, 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+                dataType: "json",
+                success: function (response){
+                    // alert('성공!');
+                    var likeCount = document.querySelector('#like-count-'+pk);
+                    likeCount.innerHTML = '좋아요' + response.like_count + '개';
+                },
+                error: function (request, status, error) {
+                    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                },
+            });
+
+
+        }else if (elem.matches('[data-name="bookmark"]')){
+            console.log('북마크!');
+
+            var pk = elem.getAttribute('name');
+            console.log(pk);
+
+            $.ajax({
+                type: "POST",
+                url: "{% url 'post:post_bookmark' %}",
+                data: {'pk': pk, 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+                dataType: "json",
+                success: function (response){
+                    // alert('성공!');
+                    var bookmarkCount = document.querySelector('#bookmark-count-'+pk);
+                    bookmarkCount.innerHTML = '북마크' + response.bookmark_count + '개';
+                },
+                error: function (request, status, error) {
+                    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                },
+            });
+        }
+        elem.classList.toggle('on');
+    }
+
+    delegation.addEventListener('click', delegationFunc);
+
+})();
+
+</script>
