@@ -28,10 +28,15 @@ def post_list(request, tag=None):
         user = get_object_or_404(get_user_model(), username=username)
         user_profile = user.profile
 
+        # following
+        following_set = request.user.profile.get_following
+        following_post_list = Post.objects.filter(author__profile__in=following_set)
+
         return render(request, 'post/post_list.html', {
             'user_profile': user_profile,
             'posts': posts,
-            'comment_form': comment_form
+            'comment_form': comment_form,
+            'following_post_list': following_post_list
         })
     else:
         return render(request, 'post/post_list.html', {

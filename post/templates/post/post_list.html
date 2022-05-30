@@ -6,6 +6,35 @@
 
 {% block content %}
 
+<!-- hidden_menu -->
+{% if user.profile.get_following %}
+<div class="hidden_menu">
+    <div class="scroll_inner">
+        {% for following in user.profile.get_following %}
+        <div class="user">
+            <div class="thumb_img">
+                {% if following.picture %}
+                <img src="{{ following.picture.url }}" alt="{{ following.nickname }}의 프로필 이미지">
+                {% else %}
+                <img src="{% static 'imgs/thumb.jpeg' %}" alt="{{ following.nickname }}의 프로플 이미지">
+                {% endif %}
+            </div>
+            <div class="id"> {{ following.nickname }} </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% else %}
+<div class="hidden_menu">
+    <div class="scroll_inner">
+        <div class="notic">
+            팔로우한 유저가 없습니다. 마음에 드는 분을 팔로우해보세요.
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- main -->
 <section id="main_container">
     <div class="inner">
@@ -42,9 +71,9 @@
                         <ul class="toggle_box">
                             <li>
                                 {% if user.profile in post.author.profile.get_follower %}
-                                <input type="submit" class="follow" value="팔로잉" data-name="follow" name="{{ post.author.profile.id }">
+                                <input type="submit" class="follow" value="팔로잉" data-name="follow" name="{{ post.author.profile.id }}">
                                 {% else %}
-                                <input type="submit" class="follow" value="팔로우" data-name="follow" name="{{ post.author.profile.id }">
+                                <input type="submit" class="follow" value="팔로우" data-name="follow" name="{{ post.author.profile.id }}">
                                 {% endif %}
                             </li>
                             {% if post.author == user %}
@@ -128,7 +157,7 @@
             </article>
             {% endfor %}
         </div>
-        <input type="hidden" id="page" value="1">
+        <input type="hidden" id="page" value="2">
 
         <div class="side_box" style="">
             <div class="user_profile">
@@ -154,18 +183,44 @@
                 </header>
 
                 <div class="scroll_inner">
+                    {% if following_post_list %}
+                    {% for post in following_post_list %}
                     <div class="thumb_user">
                         <div class="profile_thumb">
-                            <img src="imgs/thumb02.jpg" alt="프로필사진">
+                            <img src="{{ post.photo.url }}" alt="프로필사진">
                         </div>
                         <div class="detail">
-                            <div class="id">kind_tigher</div>
-                            <div class="time">2시간 전</div>
+                            <div class="id">{{ post.content }}</div>
+                            <div class="time">{{ post.updated_at | timesince }}</div>
                         </div>
                     </div>
+                    {% endfor %}
+                    {% endif %}
                 </div>
             </article>
+
+            <article class="recommend">
+                <header class="reco_header">
+                    <div>회원님을 위한 추천</div>
+                    <div class="more">모두 보기</div>
+                </header>
+
+                <!-- TODO : 슬라이싱  -->
+                {% for post in posts %}
+                <div class="thumb_user">
+                    <div class="profile_thumb">
+                        <img src="{{ post.photo.url }}" alt="프로필사진">
+                    </div>
+                    <div class="detail">
+                        <div class="id">{{ post.content }}</div>
+                        <div class="time">{{ post.updated_at | timesince }}</div>
+                    </div>
+                </div>
+
+                {% endfor %}
+            </article>
         </div>
+
     </div>
 </section>
 
