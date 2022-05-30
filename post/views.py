@@ -1,5 +1,9 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+
+from .admin import PostForm
 from .models import Post
 
 '''
@@ -24,3 +28,69 @@ def post_list(request):
         return render(request, 'post/post_list.html', {
             'posts': posts
         })
+
+# 신규 포스트 작성
+@login_required
+def post_new(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            # post.tag_save()
+            messages.info(request, '새 글이 등록되었습니다.')
+
+            return redirect('post:post_list')  # post/post_list 페이지로 이동
+    else:
+        form = PostForm()
+    return render(request, 'post/post_new.html', {
+        'form': form
+    })
+
+# 포스트 편집
+@login_required
+def post_edit(request, pk):
+
+    # get_object_or_404 : 모델에서 찾는 요소가 있으면 반환, 없으면 404에러
+    # objects.get을 사용 시, 찾는 요소가 없다면 500에러가 발생한다.
+    post = get_object_or_404(Post, pk=pk)
+    if post.author != request.user:
+        messages.warning(request, '잘못된 접근입니다.')
+
+        return redirect('post:post_list')
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            post = form.save()
+            # post.tag_set.clear()
+            # post.tag_save()
+            messages.success(request, '수정 완료')
+
+            return redirect('post:post_list')
+
+    else:
+        form = PostForm(instance=post)
+
+    return render(request, 'post/post_edit.html', {
+        'post' : post,
+        'form' : form
+    })
+
+# 포스팅 삭제
+@login_required
+def post_delete(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+
+    if post.author != request.user or request.method != 'POST':
+        messages.warning(request, '잘못된 접근입니다.')
+
+    else:
+        post.delete()
+        messages.success(request, '삭제 완료')
+
+    return redirect('post:post_list')
+
+
+
