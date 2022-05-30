@@ -247,3 +247,51 @@ def comment_delete(request):
         status = 0
 
     return HttpResponse(json.dumps({'message': message, 'status': status, }), content_type="application/json")
+
+
+def post_detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    comment_form = CommentForm()
+
+    return render(request, 'post/post_detail.html', {
+        'comment_form': comment_form,
+        'post': post
+    })
+
+
+@login_required
+def comment_new_detail(request):
+    pk = request.POST.get('pk')
+    post = get_object_or_404(Post, pk=pk)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.author = request.user
+            comment.post = post
+            comment.save()
+
+            return render(request, 'post/comment_new_detail_ajax.html', {
+                'comment': comment
+            })
+
+
+@login_required
+def my_post_list(request, username):
+    user = get_object_or_404(get_user_model(), username=username)
+    user_profile = user.profile
+    target_user = get_user_model().objects.filter(id=user.id)\
+                                  .select_related('profile')\
+                                  .prefetch_related('profile__follower_user__from_user', 'profile__follow_user__to_user')
+
+    post_list = user.post_set.all()
+    all_post_list = Post.objects.all()
+
+    return render(request, 'post/my_post_list.html', {
+        'user_profile': user_profile,
+        'target_user': target_user,
+        'post_list' : post_list,
+        'all_post_list' : all_post_list,
+        'username' : username
+    })
+
