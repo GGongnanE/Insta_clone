@@ -13,4 +13,7 @@ urlpatterns = [
     path('comment/new/', comment_new, name='comment_new'),
     path('comment/delete/', comment_delete, name='comment_delete'),
     path('explore/tags/<tag>/', post_list, name='post_search'),
+    path('<int:pk>/', post_detail, name='post_detail'),
+    path('comment_detail/new/', comment_new_detail, name='comment_new_detail')
+
 ]
