@@ -41,10 +41,22 @@
                     <div class="sprite_more_icon" data-name="more">
                         <ul class="toggle_box">
                             <li>
-                                <input type="submit" class="follow" value="팔로잉" data-name="follow">
+                                {% if user.profile in post.author.profile.get_follower %}
+                                <input type="submit" class="follow" value="팔로잉" data-name="follow" name="{{ post.author.profile.id }">
+                                {% else %}
+                                <input type="submit" class="follow" value="팔로우" data-name="follow" name="{{ post.author.profile.id }">
+                                {% endif %}
                             </li>
-                            <li>수정</li>
-                            <li>삭제</li>
+                            {% if post.author == user %}
+
+                            <li><a class="post-edit" href="{% url 'post:post_edit' post.pk %}"></a>수정</li>
+                            <li>
+                                <form class="post-delete-form" action="{% url 'post:post_delete' post.pk %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" class="post-delete" value="삭제">
+                                </form>
+                            </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </header>
