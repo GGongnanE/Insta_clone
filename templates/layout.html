@@ -1,18 +1,42 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- Facebook Meta Tags / 페이스북 오픈 그래프 -->
+    <meta property="og:url" content="http://kindtiger.dothome.co.kr/insta">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="instagram">
+    <meta property="og:description" content="instagram clone">
+    <meta property="og:image" content="http://kindtiger.dothome.co.kr/insta/imgs/instagram.jpeg">
+    .
+    <!-- Twitter Meta Tags / 트위터 -->
+    <meta name="twitter:card" content="instagram clone">
+    <meta name="twitter:title" content="instagram">
+    <meta name="twitter:description" content="instagram clone">
+    <meta name="twitter:image" content="http://kindtiger.dothome.co.kr/insta/imgs/instagram.jpeg">
+
+    <!-- Google / Search Engine Tags / 구글 검색 엔진 -->
+    <meta itemprop="name" content="instagram">
+    <meta itemprop="description" content="instagram clone">
+    <meta itemprop="image" content="http://kindtiger.dothome.co.kr/insta/imgs/instagram.jpeg">
+
     <title>Insta Clone Site</title>
 
     <link rel="stylesheet" href="{% static 'css/common.css' %}">
-    <link rel="stylesheet" href="{% static 'css/detail-page.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-    <link rel="stylesheet" href="{% static 'css/new_post.css' %}">
-    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="{% static 'css/reset.css' %}">
+    <link rel="shortcut icon" href="{% static 'imgs/instagram.png' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <!--    <link rel="shortcut icon" href="{% static 'imgs/instagram.png' %}">-->
+
+    {% block head %}
+    {% endblock %}
 
 </head>
 <body>
@@ -39,7 +63,14 @@
                     <div class="sprite_camera_icon"><a href="#"></a></div>
                     <div class="sprite_compass_icon"><a href="#"></a></div>
                     <div class="sprite_heart_icon_outline"><a href="#"></a></div>
+
+                    {% if user.is_authenticated %}
                     <div class="sprite_user_icon_outline"><a href="#"></a></div>
+                    {% else %}
+                    <div class="sprite_user_icon_outline">
+                        <a href="{% url 'accounts:login' %}"></a>
+                    </div>
+                    {% endif %}
                 </div>
             </section>
         </header>
@@ -48,6 +79,12 @@
         {% endblock %}
 
     </section>
+
+    <!-- jQuery (부트스트랩의 자바스크립트 플러그인을 위해 필요합니다) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- <script src="{% static 'js/insta.js' %}"></script> -->
+    {% block js %}
+    {% endblock %}
 
 </body>
 </html>
