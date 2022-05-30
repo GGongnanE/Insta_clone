@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .admin import PostForm
 from .forms import CommentForm
-from .models import Post, Comment
+from .models import Post, Like, Comment, Tag
 
 import json
 from django.views.decorators.http import require_POST
@@ -13,6 +13,7 @@ from django.http import HttpResponse
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
+from django.db.models import Count
 
 '''
     1. 요청이 들어오면 posts 변수에 Post 전부를 저장
@@ -23,13 +24,22 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 # Create your views here.
 def post_list(request, tag=None):
+    # Tag 검색에 따른 post_list 가져오기
+    if tag:
+        # 위에서 받은 태그를 대소문자 구분없이 tag_set_name로 검색한다.
+        post_list = Post.objects.filter(tag_set__name__iexact=tag) \
+            .prefetch_related('tag_set', 'like_user_set__profile', 'comment_set__author__profile',  # 1:1, 1:N, M:N 가능
+                              'author__profile__follower_user', 'author__profile__follower_user__from_user') \
+            .select_related('author__profile')  # 1:1의 관계에서만 사용
+    else:
+        post_list = Post.objects.all() \
+            .prefetch_related('tag_set', 'like_user_set__profile', 'comment_set__author__profile',
+                              'author__profile__follower_user', 'author__profile__follower_user__from_user') \
+            .select_related('author__profile')
 
     comment_form = CommentForm()
     paginator = Paginator(post_list, 3)
     page_num = request.POST.get('page')
-
-    print("page_num : ", page_num)  # None
-    print("page_num's type : ", type(page_num))
 
     try:
         posts = paginator.page(page_num)
@@ -41,11 +51,18 @@ def post_list(request, tag=None):
         posts = paginator.page(paginator.num_pages)
 
     # Ajax 호출 되었을 경우
-    if request.is_ajax():
+    # if request.is_ajax():        <-- # django 4.x에서는 삭제됨.
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         return render(request, 'post/post_list_ajax.html', {
             'posts': posts,
             'comment_form': comment_form,
         })
+
+    if request.method == 'POST':
+        tag = request.POST.get('tag')
+        tag_clean = ''.join(e for e in tag if e.isalnum())
+
+        return redirect('post:post_search', tag_clean)
 
     if request.user.is_authenticated:
         username = request.user
@@ -68,6 +85,7 @@ def post_list(request, tag=None):
             'comment_form': comment_form
         })
 
+
 # 신규 포스트 작성
 @login_required
 def post_new(request):
@@ -77,7 +95,7 @@ def post_new(request):
             post = form.save(commit=False)
             post.author = request.user
             post.save()
-            # post.tag_save()
+            post.tag_save()
             messages.info(request, '새 글이 등록되었습니다.')
 
             return redirect('post:post_list')  # post/post_list 페이지로 이동
@@ -87,10 +105,10 @@ def post_new(request):
         'form': form
     })
 
+
 # 포스트 편집
 @login_required
 def post_edit(request, pk):
-
     # get_object_or_404 : 모델에서 찾는 요소가 있으면 반환, 없으면 404에러
     # objects.get을 사용 시, 찾는 요소가 없다면 500에러가 발생한다.
     post = get_object_or_404(Post, pk=pk)
@@ -113,9 +131,10 @@ def post_edit(request, pk):
         form = PostForm(instance=post)
 
     return render(request, 'post/post_edit.html', {
-        'post' : post,
-        'form' : form
+        'post': post,
+        'form': form
     })
+
 
 # 포스팅 삭제
 @login_required
@@ -145,7 +164,7 @@ def post_like(request):
     else:
         message = "좋아요"
 
-    context = {'like_count': post.like_count, 'message': message }
+    context = {'like_count': post.like_count, 'message': message}
 
     return HttpResponse(json.dumps(context), content_type="application/json")
 
@@ -168,14 +187,16 @@ def post_bookmark(request):
 
     return HttpResponse(json.dumps(context), content_type="application/json")
 
+
 '''
     comment(댓글)
     
 '''
 
+
 @login_required
 def comment_new(request):
-    pk = request.POST.get('pk')     # ajax를 통신하는 부분
+    pk = request.POST.get('pk')  # ajax를 통신하는 부분
     post = get_object_or_404(Post, pk=pk)
 
     if request.method == 'POST':
@@ -226,4 +247,3 @@ def comment_delete(request):
         status = 0
 
     return HttpResponse(json.dumps({'message': message, 'status': status, }), content_type="application/json")
-

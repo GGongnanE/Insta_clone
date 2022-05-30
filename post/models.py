@@ -3,6 +3,8 @@ from django.conf import settings
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
 
+import re
+
 
 def photo_path(instance, filename):
     from time import strftime
@@ -31,7 +33,7 @@ class Post(models.Model):
                                                blank=True,
                                                related_name='bookmark_user_set',
                                                through='Bookmark')
-
+    tag_set = models.ManyToManyField('Tag', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
 
@@ -45,6 +47,17 @@ class Post(models.Model):
     @property
     def bookmark_count(self):
         return self.bookmark_user_set.count()
+
+    def tag_save(self):
+        # 정규표현식 사용해 tag 저장
+        tags = re.findall(r'#(\w+)\b', self.content)
+
+        if not tags:
+            return
+
+        for t in tags:
+            tag, tag_created = Tag.objects.get_or_create(name=t)
+            self.tag_set.add(tag)  # ManyToManyField에 인스턴스 추가
 
     def __str__(self):
         return self.content
@@ -91,3 +104,9 @@ class Comment(models.Model):
         return self.content
 
 
+# 태그
+class Tag(models.Model):
+    name = models.CharField(max_length=140, unique=True)
+
+    def __str__(self):
+        return self.name

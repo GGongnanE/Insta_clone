@@ -50,14 +50,20 @@
                         <div class="sprite_write_logo"></div>
                     </div>
                 </h1>
+
                 <!-- search field -->
                 <div class="search_field">
-                    <input type="text" placeholder="검색" tabindex="0" id="search_field">
-                    <div class="fake_field">
-                        <span class="sprite_small_search_icon"></span>
-                        <span>검색</span>
-                    </div>
+                    <form class="search-form" action="{% url 'post:post_list' %}" method="post">
+                        {% csrf_token %}
+                        <input class="tag-search" type="text" name="tag" placeholder="태그검색" pattern="pattern=#?[\wㄱ-ㅎ|ㅏ-ㅣ|가-힣]+" title="특수문자, 공백 입력불가" required>
+
+                        <div class="fake_field">
+                            <span class="sprite_small_search_icon"></span>
+                            <span>검색</span>
+                        </div>
+                    </form>
                 </div>
+
                 <!--    right icons    -->
                 <div class="right_icons">
                     <div class="sprite_camera_icon"><a href="#"></a></div>

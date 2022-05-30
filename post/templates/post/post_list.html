@@ -1,5 +1,6 @@
 {% extends "post/layout.html" %}
 {% load static %}
+{% load post_extras %}
 
 {% block head %}
 {% endblock %}
@@ -122,6 +123,10 @@
                     <span id="bookmark-count-{{ post.id }}">북마크 {{ post.bookmark_count }} 개</span>
                 </div>
 
+                <!-- 포스트의 컨텐츠 -->
+                <div class="content">
+                    {{ post|add_link|safe|linebreaksbr }}
+                </div>
 
                 <div class="comment_container">
                     <div class="comment" id="comment-list-ajax-post-{{ post.id }}">
